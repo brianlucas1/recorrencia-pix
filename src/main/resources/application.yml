@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: pix-recorrente
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pix_recorrente
+    username: pix
+    password: pix
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: teste
+    password: teste
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+logging:
+  level:
+    root: INFO
+    br.com.recorrente.recorrente: DEBUG
+
+pix:
+  rabbitmq:
+    schedule-exchange: pix.recorrente.schedule
+    schedule-routing-key: pix.recorrente.schedule.created
+    schedule-queue: pix.recorrente.schedule
+    retry-exchange: pix.recorrente.schedule.retry
+    retry-routing-key: pix.recorrente.schedule.retry.created
+    retry-queue: pix.recorrente.schedule.retry
+    dead-letter-exchange: pix.recorrente.schedule.dlx
+    dead-letter-routing-key: pix.recorrente.schedule.dead
+    dead-letter-queue: pix.recorrente.schedule.dlq
+  mensageria:
+    retry:
+      max-attempts: 3
+      delay: 5000
+  integracao:
+    simular-falha-api: false
+    padrao-erro-irrecuperavel: ""
