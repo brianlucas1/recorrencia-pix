@@ -15,8 +15,30 @@
 - a aplicação vai ficar disponivel em http://localhost:8080
   
   ### Endpoints disponíveis
-- POST	/api/agendamentos	Cria um novo agendamento PIX recorrente e dispara a análise antifraude
-- GET	/api/agendamentos/{id}	Consulta um agendamento específico pelo seu identificador
+- POST	/v1/agendamentos	Cria um novo agendamento PIX recorrente e dispara a análise antifraude
+- Exemplo de body 
+
+{
+
+  "nomePagador":"teste",
+  
+  "nomeRecebedor":"test2e",
+  
+  "documentoPagador": "11111222232",
+  
+  "documentoRecebedor": "22222222222",
+  
+  "valor": "10.00",
+  
+  "periodicidade": "MENSAL",
+  
+  "primeiraExecucao": "2025-11-01T10:00:00Z",
+  
+  "descricao": "Assinatura básica"
+  
+}
+
+- GET	/v1/agendamentos/{id}	Consulta um agendamento específico pelo seu identificador
 
 ### URLS 
 - http://localhost:8080/actuator/health
