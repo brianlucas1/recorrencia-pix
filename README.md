@@ -31,5 +31,10 @@
 
 - AMQP: amqp://guest:guest@localhost:5672/
 
+### Regras aplicadas
+- Regra de valor de pix: Onde o usuario coloca um valor de limite que ele mesmo conhece para não ter problemas de tentativas de pix fraudulentos. ( foi colocado um valor como corte de 10000 )
+- Regra de quantidade de agendamentos: é feito uma consulta pelo documento do pagador para ver se existem outros agendamentos no status aguardando revisão ou agendado ) Se já existir não fazemos o agendamento deixamos em analise.
+- Regra de transferencia para o mesmo documento: Se o documento informado for o mesmo para o agendamento é rejeitado pois não faz sentido esse agendamento.
+
 
 
