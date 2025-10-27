@@ -61,38 +61,41 @@ public class AgendamentoRecorrenteService {
 
 	private ResponseCriacaoAgendamentoDTO criarNovoAgendamento(@Valid RequestAgendamentoDTO requisicao,
 			String referencia, boolean chaveFornecida) {
-		 AgendamentoRecorrente agendamento = paraEntidade(requisicao, referencia);
-	        ResultadoFraudeDTO resultado = analiseFraudeService.avaliar(new ContextoAvaliacaoFraudeDTO(
-	                agendamento.getDocumentoPagador(),
-	                agendamento.getDocumentoRecebedor(),
-	                agendamento.getValor(),
-	                agendamento.getPeriodicidade(),
-	                agendamento.getPrimeiraExecucao()));
+		
+		AgendamentoRecorrente agendamento = paraEntidade(requisicao, referencia);
+		
+		ResultadoFraudeDTO resultado = analiseFraudeService.avaliar(
+				new ContextoAvaliacaoFraudeDTO(agendamento.getDocumentoPagador(), agendamento.getDocumentoRecebedor(),
+						agendamento.getValor(), agendamento.getPeriodicidade(), agendamento.getPrimeiraExecucao()));
 
-	        aplicarDecisaoFraude(agendamento, resultado);
-	        LOGGER.info(
-	                "Resultado antifraude para referência {}: status={} motivo={}",
-	                referencia,
-	                resultado.status(),
-	                resultado.motivo());
-	        try {
-	            AgendamentoRecorrente salvo = agendamentoRepo.save(agendamento);
-	            eventoAgendamento.publicarCriacao(salvo);
-	            return new ResponseCriacaoAgendamentoDTO(paraResposta(salvo), true);
-	        } catch (DataIntegrityViolationException e) {
-	            if (chaveFornecida) {
-	                return agendamentoRepo
-	                        .findByReferenciaExterna(referencia)
-	                        .map(existente -> new ResponseCriacaoAgendamentoDTO(paraResposta(existente), false))
-	                        .orElseThrow(() -> e);
-	            }
-	            throw e;
-	        }
+		aplicarDecisaoFraude(agendamento, resultado);
+		
+		LOGGER.info("Resultado antifraude para referência {}: status={} motivo={}", referencia, resultado.status(),
+				resultado.motivo());
+		try {
+			AgendamentoRecorrente salvo = agendamentoRepo.save(agendamento);
+			
+			eventoAgendamento.publicarCriacao(salvo);
+			
+			return new ResponseCriacaoAgendamentoDTO(paraResposta(salvo), true);
+			
+		} catch (DataIntegrityViolationException e) {
+			
+			if (chaveFornecida) {
+				
+				return agendamentoRepo.findByReferenciaExterna(referencia)
+						.map(existente -> new ResponseCriacaoAgendamentoDTO(paraResposta(existente), false))
+						.orElseThrow(() -> e);
+			}
+			throw e;
+		}
 	}
 
 	private void aplicarDecisaoFraude(AgendamentoRecorrente agendamento, ResultadoFraudeDTO resultado) {
-		 agendamento.setStatusFraude(resultado.status());
-	        agendamento.setMotivoRisco(resultado.motivo());
+		
+		 agendamento.setStatusFraude(resultado.status());		 
+	     agendamento.setMotivoRisco(resultado.motivo());
+	        
 	        if (resultado.status() == StatusDecisaoFraudeEnum.APROVADO) {
 	            agendamento.setStatus(StatusAgendamentoEnum.AGENDADO);
 	        } else if (resultado.status() == StatusDecisaoFraudeEnum.REVISAO_MANUAL) {

@@ -1,0 +1,77 @@
+name: recorrencia-pix
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: recorrencia-pix:local
+    container_name: recorrencia-pix
+    environment:
+      # usa seu app.yml (perfil default) e sobrescreve conexões por env
+      SPRING_PROFILES_ACTIVE: default
+
+      # DB (substitui localhost pelo hostname do serviço: postgres)
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pix_recorrente
+      SPRING_DATASOURCE_USERNAME: pix
+      SPRING_DATASOURCE_PASSWORD: pix
+
+      # RabbitMQ (hostname do serviço: rabbitmq; credenciais do compose)
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+
+      # Actuator + métricas (sem tocar no YAML da app)
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus,mappings
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
+      MANAGEMENT_METRICS_TAGS_APPLICATION: pix-recorrente
+
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_BR_COM_RECORRENTE_RECORRENTE: DEBUG
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/actuator/health/readiness | grep -q '\"status\":\"UP\"'"]
+      interval: 15s
+      timeout: 5s
+      retries: 40
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgresRecorrencia
+    environment:
+      POSTGRES_DB: pix_recorrente
+      POSTGRES_USER: pix
+      POSTGRES_PASSWORD: pix
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pix -d pix_recorrente"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmqRecorrencia
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672" # console web
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  pgdata:
